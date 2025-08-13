@@ -19,6 +19,10 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relacionamentos com o sistema Zanai
+  agents    Agent[]
+  workspaces Workspace[]
 }
 
 model Post {
@@ -29,4 +33,72 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Modelos para o sistema Zanai
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  config      String   // JSON com configuração do workspace
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id])
+  agents      Agent[]
+  compositions Composition[]
+  
+  @@index([userId])
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // 'template', 'custom', 'composed'
+  config      String   // YAML com configuração do agente
+  knowledge   String?  // Markdown com conhecimento do agente
+  status      String   @default("active") // 'active', 'inactive', 'training'
+  workspaceId String
+  userId      String?  // Opcional para agentes compartilhados
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
+  compositions Composition[]
+  learnings   Learning[]
+  
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model Composition {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  config      String   // YAML com configuração da composição
+  status      String   @default("draft") // 'draft', 'active', 'archived'
+  workspaceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  agents      Agent[]
+  
+  @@index([workspaceId])
+}
+
+model Learning {
+  id          String   @id @default(cuid())
+  agentId     String
+  type        String   // 'feedback', 'pattern', 'adaptation'
+  data        String   // JSON com dados de aprendizado
+  confidence  Float    @default(0.0)
+  createdAt   DateTime @default(now())
+  
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  
+  @@index([agentId])
 }
