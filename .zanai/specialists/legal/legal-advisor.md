@@ -39,7 +39,7 @@ Responda sempre em português com precisão jurídica e linguagem acessível.
 - Conformidade LGPD
 
 ## Criado em
-2025-08-14T01:08:39.164Z
+2025-08-14T02:44:20.459Z
 
 ---
 

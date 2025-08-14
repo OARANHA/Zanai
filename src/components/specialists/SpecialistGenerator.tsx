@@ -51,7 +51,7 @@ interface NewSpecialist {
 export default function SpecialistGenerator() {
   const [categories, setCategories] = useState<SpecialistCategory[]>([]);
   const [templates, setTemplates] = useState<SpecialistTemplate[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isCreateSpecialistOpen, setIsCreateSpecialistOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [apiWarning, setApiWarning] = useState<string>('');
@@ -165,7 +165,7 @@ export default function SpecialistGenerator() {
     }
   };
 
-  const filteredTemplates = selectedCategory 
+  const filteredTemplates = selectedCategory !== 'all' 
     ? templates.filter(template => template.category === selectedCategory)
     : templates;
 
@@ -295,7 +295,7 @@ export default function SpecialistGenerator() {
             <SelectValue placeholder="Todas as categorias" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as categorias</SelectItem>
+            <SelectItem value="all">Todas as categorias</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 <div className="flex items-center space-x-2">

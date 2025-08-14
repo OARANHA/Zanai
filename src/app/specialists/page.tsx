@@ -92,7 +92,7 @@ export default function SpecialistsPage() {
   // Usar dados de teste por enquanto
   const [categories, setCategories] = useState<SpecialistCategory[]>(testCategories);
   const [templates, setTemplates] = useState<SpecialistTemplate[]>(testTemplates);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isCreateSpecialistOpen, setIsCreateSpecialistOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [newSpecialist, setNewSpecialist] = useState<NewSpecialist>({
@@ -254,7 +254,7 @@ export default function SpecialistsPage() {
     }
   };
 
-  const filteredTemplates = selectedCategory 
+  const filteredTemplates = selectedCategory !== 'all' 
     ? templates.filter(template => template.category === selectedCategory)
     : templates;
 
@@ -277,8 +277,8 @@ export default function SpecialistsPage() {
             <Link href="/" className="flex items-center space-x-2">
               <div className="relative w-10 h-10">
                 <img
-                  src="/logo.svg"
-                  alt="Zanai Logo"
+                  src="/hippocampus-logo.png"
+                  alt="Zanai Project Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -424,7 +424,7 @@ export default function SpecialistsPage() {
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center space-x-2">
