@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare } from 'lucide-react';
+import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles } from 'lucide-react';
 
 interface Agent {
   id: string;
@@ -267,10 +268,14 @@ export default function Home() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="agents" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="agents" className="flex items-center space-x-2">
               <Brain className="w-4 h-4" />
               <span>Agentes</span>
+            </TabsTrigger>
+            <TabsTrigger value="specialists" className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4" />
+              <span>Especialistas</span>
             </TabsTrigger>
             <TabsTrigger value="composition" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
@@ -392,6 +397,110 @@ export default function Home() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </TabsContent>
+
+          {/* Specialists Tab */}
+          <TabsContent value="specialists" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Gerador de Especialistas</h2>
+                <p className="text-muted-foreground mt-2">
+                  Crie agentes especialistas personalizados usando IA para diversas áreas de negócio
+                </p>
+              </div>
+              <Link href="/specialists">
+                <Button>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Abrir Gerador de Especialistas
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">📊</span>
+                    <CardTitle className="text-lg">Business Specialists</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Analistas de negócio, especialistas em marketing e automação de vendas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Badge variant="secondary">Business Analyst</Badge>
+                    <Badge variant="secondary">Marketing Specialist</Badge>
+                    <Badge variant="secondary">Sales Automator</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">⚙️</span>
+                    <CardTitle className="text-lg">Technical Specialists</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Especialistas em integrações técnicas, segurança e gestão de riscos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Badge variant="secondary">Payment Integration</Badge>
+                    <Badge variant="secondary">Risk Manager</Badge>
+                    <Badge variant="secondary">Security Specialist</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">✍️</span>
+                    <CardTitle className="text-lg">Content Specialists</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Especialistas em criação de conteúdo, SEO e copywriting
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Badge variant="secondary">Content Marketer</Badge>
+                    <Badge variant="secondary">Copywriter</Badge>
+                    <Badge variant="secondary">SEO Specialist</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">⚖️</span>
+                    <CardTitle className="text-lg">Legal Specialists</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Especialistas em aspectos legais e conformidade regulatória
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Badge variant="secondary">Legal Advisor</Badge>
+                    <Badge variant="secondary">Compliance Officer</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center py-8">
+              <Link href="/specialists">
+                <Button size="lg">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Gerar Novos Especialistas com IA
+                </Button>
+              </Link>
             </div>
           </TabsContent>
 
