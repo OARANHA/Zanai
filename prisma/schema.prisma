@@ -81,6 +81,7 @@ model Agent {
   compositions Composition[]
   learnings   Learning[]
   executions  AgentExecution[]
+  metrics     AgentMetrics[]
   
   @@index([workspaceId])
   @@index([userId])
@@ -151,6 +152,21 @@ model Execution {
   
   @@index([compositionId])
   @@index([status])
+}
+
+model AgentMetrics {
+  id          String   @id @default(cuid())
+  timestamp   BigInt   @map("timestamp")
+  agentId     String
+  metricName  String
+  metricValue Float
+  tags        String?
+  
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  
+  @@index([agentId, timestamp])
+  @@index([metricName, timestamp])
+  @@map("agent_metrics")
 }
 
 // Modelos para o sistema urbano
