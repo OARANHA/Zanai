@@ -269,12 +269,6 @@ export default function Home() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Link href="/login">
-              <Button variant="outline">
-                <Shield className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
-            </Link>
           </div>
         </div>
       </header>

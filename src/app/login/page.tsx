@@ -75,7 +75,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <Label htmlFor="userType">Tipo de Acesso</Label>
+              <Label htmlFor="userType">Área de Acesso</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
                 <Button
                   type="button"
@@ -85,7 +85,7 @@ export default function LoginPage() {
                   className="flex items-center justify-center"
                 >
                   <Shield className="w-4 h-4 mr-1" />
-                  Admin
+                  Painel
                 </Button>
                 <Button
                   type="button"
@@ -152,16 +152,13 @@ export default function LoginPage() {
             )}
             
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Acessando...' : 'Acessar Sistema'}
             </Button>
           </form>
           
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Não tem uma conta?{' '}
-              <a href="/register" className="text-blue-600 hover:underline">
-                Registre-se
-              </a>
-            </p>
+            <p>Acesso restrito a usuários autorizados</p>
+            <p className="mt-1">Entre em contato com o administrador para solicitar acesso</p>
           </div>
         </CardContent>
       </Card>
