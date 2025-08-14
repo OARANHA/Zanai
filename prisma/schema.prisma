@@ -87,17 +87,18 @@ model Agent {
 }
 
 model Composition {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  config      String   // YAML com configuração da composição
-  status      String   @default("draft") // 'draft', 'active', 'archived'
-  workspaceId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  config        String   // YAML com configuração da composição
+  status        String   @default("draft") // 'draft', 'active', 'inactive'
+  workspaceId   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  agents      Agent[]
+  workspace     Workspace  @relation(fields: [workspaceId], references: [id])
+  agents        Agent[]
+  executions    Execution[]
   
   @@index([workspaceId])
 }
@@ -132,6 +133,23 @@ model AgentExecution {
   agent        Agent    @relation(fields: [agentId], references: [id])
   
   @@index([agentId])
+  @@index([status])
+}
+
+model Execution {
+  id           String   @id @default(cuid())
+  compositionId String
+  input        String
+  results      String   // JSON com resultados da execução
+  status       String   @default("pending") // 'pending', 'running', 'completed', 'failed'
+  error        String?  // Mensagem de erro se falhou
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  
+  composition  Composition @relation(fields: [compositionId], references: [id])
+  
+  @@index([compositionId])
   @@index([status])
 }
 

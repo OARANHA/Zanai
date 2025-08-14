@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, config, workspaceId, agentIds } = await request.json();
+    const { name, description, workspaceId, agents } = await request.json();
 
     if (!name || !workspaceId) {
       return NextResponse.json(
@@ -38,19 +38,19 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description: description || '',
-        config: config || '{}',
+        config: '{}',
         workspaceId,
-        status: 'draft'
+        status: 'active'
       }
     });
 
     // Conectar agentes à composição se fornecidos
-    if (agentIds && agentIds.length > 0) {
+    if (agents && agents.length > 0) {
       await db.composition.update({
         where: { id: composition.id },
         data: {
           agents: {
-            connect: agentIds.map((id: string) => ({ id }))
+            connect: agents.map((id: string) => ({ id }))
           }
         }
       });
