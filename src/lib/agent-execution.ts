@@ -1,0 +1,206 @@
+import ZAI from 'z-ai-web-dev-sdk';
+import { db } from '@/lib/db';
+
+export interface AgentExecutionRequest {
+  agentId: string;
+  input: string;
+  context?: any;
+}
+
+export interface AgentExecutionResult {
+  success: boolean;
+  output?: string;
+  error?: string;
+  executionTime: number;
+}
+
+export class AgentExecutionService {
+  private static instance: AgentExecutionService;
+  private zai: any = null;
+
+  private constructor() {}
+
+  public static getInstance(): AgentExecutionService {
+    if (!AgentExecutionService.instance) {
+      AgentExecutionService.instance = new AgentExecutionService();
+    }
+    return AgentExecutionService.instance;
+  }
+
+  private async initializeZAI() {
+    if (!this.zai) {
+      try {
+        this.zai = await ZAI.create();
+      } catch (error) {
+        console.error('Erro ao inicializar ZAI:', error);
+        throw new Error('Falha ao inicializar serviço de IA');
+      }
+    }
+    return this.zai;
+  }
+
+  public async executeAgent(request: AgentExecutionRequest): Promise<AgentExecutionResult> {
+    const startTime = Date.now();
+    
+    try {
+      // Buscar configuração do agente
+      const agent = await db.agent.findUnique({
+        where: { id: request.agentId },
+        include: { workspace: true }
+      });
+
+      if (!agent) {
+        throw new Error('Agente não encontrado');
+      }
+
+      // Inicializar ZAI
+      const zai = await this.initializeZAI();
+
+      // Preparar prompt com base na configuração do agente
+      const systemPrompt = this.buildSystemPrompt(agent);
+      
+      // Executar o agente
+      const completion = await zai.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: request.input
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      });
+
+      const output = completion.choices[0]?.message?.content || '';
+      const executionTime = Date.now() - startTime;
+
+      // Registrar aprendizado
+      await this.recordLearning(agent.id, 'execution', {
+        input: request.input,
+        output,
+        executionTime,
+        success: true
+      }, 0.9);
+
+      return {
+        success: true,
+        output,
+        executionTime
+      };
+
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+      console.error('Erro ao executar agente:', error);
+
+      // Registrar falha para aprendizado
+      await this.recordLearning(request.agentId, 'execution', {
+        input: request.input,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        executionTime,
+        success: false
+      }, 0.1);
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        executionTime
+      };
+    }
+  }
+
+  private buildSystemPrompt(agent: any): string {
+    let prompt = `Você é ${agent.name}.\n\n`;
+    
+    if (agent.description) {
+      prompt += `Descrição: ${agent.description}\n\n`;
+    }
+
+    if (agent.knowledge) {
+      prompt += `Conhecimento:\n${agent.knowledge}\n\n`;
+    }
+
+    if (agent.config) {
+      try {
+        const config = JSON.parse(agent.config);
+        if (config.capabilities) {
+          prompt += `Capacidades: ${config.capabilities.join(', ')}\n\n`;
+        }
+        if (config.settings) {
+          prompt += `Configurações: ${JSON.stringify(config.settings, null, 2)}\n\n`;
+        }
+      } catch (error) {
+        // Ignorar erro de parsing, config pode estar em YAML
+      }
+    }
+
+    prompt += `Responda de forma precisa, útil e alinhada com sua especialidade.`;
+    
+    return prompt;
+  }
+
+  private async recordLearning(agentId: string, type: string, data: any, confidence: number) {
+    try {
+      await db.learning.create({
+        data: {
+          agentId,
+          type,
+          data: JSON.stringify(data),
+          confidence
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao registrar aprendizado:', error);
+    }
+  }
+
+  public async executeComposition(compositionId: string, input: string): Promise<AgentExecutionResult> {
+    try {
+      // Buscar composição com agentes
+      const composition = await db.composition.findUnique({
+        where: { id: compositionId },
+        include: {
+          agents: true,
+          workspace: true
+        }
+      });
+
+      if (!composition || composition.agents.length === 0) {
+        throw new Error('Composição não encontrada ou sem agentes');
+      }
+
+      // Executar agentes em sequência (pode ser paralelo no futuro)
+      const results: string[] = [];
+      
+      for (const agent of composition.agents) {
+        const result = await this.executeAgent({
+          agentId: agent.id,
+          input: input,
+          context: { compositionId, previousResults: results }
+        });
+
+        if (result.success && result.output) {
+          results.push(`[${agent.name}]: ${result.output}`);
+        }
+      }
+
+      const executionTime = Date.now();
+      
+      return {
+        success: true,
+        output: results.join('\n\n'),
+        executionTime
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        executionTime: 0
+      };
+    }
+  }
+}
