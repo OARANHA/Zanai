@@ -1,30 +1,4 @@
 import { Server } from 'socket.io';
-<<<<<<< HEAD
-
-export const setupSocket = (io: Server) => {
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
-    
-    // Handle messages
-    socket.on('message', (msg: { text: string; senderId: string }) => {
-      // Echo: broadcast message only the client who send the message
-      socket.emit('message', {
-        text: `Echo: ${msg.text}`,
-        senderId: 'system',
-        timestamp: new Date().toISOString(),
-      });
-    });
-
-    // Handle disconnect
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-    });
-
-    // Send welcome message
-    socket.emit('message', {
-      text: 'Welcome to WebSocket Echo Server!',
-      senderId: 'system',
-=======
 import { db } from './db';
 
 interface VSCodeContext {
@@ -278,7 +252,6 @@ export const setupSocket = (io: Server) => {
     socket.emit('connected', {
       message: 'Connected to Zanai WebSocket Server',
       socketId: socket.id,
->>>>>>> fb6b28be56851d3feb477f5a654cc4a241906917
       timestamp: new Date().toISOString(),
     });
   });
