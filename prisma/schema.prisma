@@ -17,10 +17,6 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-<<<<<<< HEAD
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-=======
   role      String   @default("user") // 'user', 'admin', 'company_admin', 'client'
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,7 +31,6 @@ model User {
   clients    Client[]
   
   @@map("users")
->>>>>>> c11bcd071ebbbf01b0ceea55ab2849eb2f3c96dd
 }
 
 model Post {
@@ -46,8 +41,6 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-<<<<<<< HEAD
-=======
 }
 
 // Modelos para o sistema Zanai
@@ -307,5 +300,4 @@ model AuditLog {
   createdAt   DateTime @default(now())
   
   @@map("audit_logs")
->>>>>>> c11bcd071ebbbf01b0ceea55ab2849eb2f3c96dd
 }
