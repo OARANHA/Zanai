@@ -36,12 +36,24 @@ interface Workspace {
   createdAt: string;
 }
 
+interface Composition {
+  id: string;
+  name: string;
+  description: string;
+  agents: string[];
+  status: 'active' | 'inactive';
+  workspaceId: string;
+  createdAt: string;
+}
+
 export default function Home() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [compositions, setCompositions] = useState<Composition[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
   const [isCreateAgentOpen, setIsCreateAgentOpen] = useState(false);
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
+  const [isCreateCompositionOpen, setIsCreateCompositionOpen] = useState(false);
   const [isExecuteAgentOpen, setIsExecuteAgentOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [executionInput, setExecutionInput] = useState('');
@@ -59,12 +71,143 @@ export default function Home() {
     description: '',
     config: '{}'
   });
+  const [newComposition, setNewComposition] = useState({
+    name: '',
+    description: '',
+    agents: [] as string[]
+  });
 
   useEffect(() => {
     // Carregar dados iniciais
     loadWorkspaces();
     loadAgents();
+    loadCompositions();
+    
+    // Criar dados de exemplo se não existirem
+    setTimeout(() => {
+      if (agents.length === 0) {
+        createSampleAgents();
+      }
+      if (compositions.length === 0) {
+        createSampleComposition();
+      }
+    }, 1000);
   }, []);
+
+  const createSampleAgents = async () => {
+    const sampleAgents = [
+      {
+        name: 'Analisador de Código',
+        description: 'Analisa código fonte e identifica problemas de qualidade e segurança',
+        type: 'template' as const,
+        config: `model: gpt-4
+temperature: 0.3
+max_tokens: 2000
+system_prompt: |
+  Você é um especialista em análise de código.
+  Analise o código fornecido e identifique:
+  1. Problemas de segurança
+  2. Oportunidades de otimização
+  3. Boas práticas de programação
+  4. Possíveis bugs`.replace(/`/g, '\\`'),
+        knowledge: '# Guia de Análise de Código\n## Foco Principal\n- Segurança\n- Performance\n- Qualidade\n- Manutenibilidade',
+        workspaceId: selectedWorkspace || 'default'
+      },
+      {
+        name: 'Gerador de API',
+        description: 'Cria endpoints de API RESTful a partir de especificações',
+        type: 'template' as const,
+        config: `model: gpt-4
+temperature: 0.2
+max_tokens: 3000
+system_prompt: |
+  Você é um especialista em desenvolvimento de APIs.
+  Gere código para endpoints RESTful completos incluindo:
+  1. Rotas e controladores
+  2. Validação de dados
+  3. Tratamento de erros
+  4. Documentação`.replace(/`/g, '\\`'),
+        knowledge: '# Padrões de API\n## REST\n- Métodos HTTP padrão\n- Respostas JSON\n- Códigos de status HTTP\n## Segurança\n- Validação de input\n- Autenticação',
+        workspaceId: selectedWorkspace || 'default'
+      },
+      {
+        name: 'Assistente de Documentação',
+        description: 'Gera documentação técnica e guias de usuário',
+        type: 'template' as const,
+        config: `model: gpt-4
+temperature: 0.4
+max_tokens: 2500
+system_prompt: |
+  Você é um especialista em documentação técnica.
+  Crie documentação clara e completa incluindo:
+  1. Descrição funcional
+  2. Guia de instalação
+  3. Exemplos de uso
+  4. Referência de API`.replace(/`/g, '\\`'),
+        knowledge: '# Padrões de Documentação\n## Estrutura\n- Visão geral\n- Instalação\n- Uso básico\n- Exemplos avançados\n## Formatos\n- Markdown\n- Code blocks\n- Links úteis',
+        workspaceId: selectedWorkspace || 'default'
+      }
+    ];
+
+    for (const agent of sampleAgents) {
+      try {
+        await fetch('/api/agents', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(agent),
+        });
+      } catch (error) {
+        console.error('Erro ao criar agente de exemplo:', error);
+      }
+    }
+    
+    // Recarregar agentes após criar
+    setTimeout(loadAgents, 500);
+  };
+
+  const createSampleComposition = async () => {
+    // Esperar um pouco para garantir que os agentes foram criados
+    setTimeout(async () => {
+      const activeAgents = agents.filter(agent => agent.status === 'active');
+      if (activeAgents.length >= 3) {
+        const sampleComposition = {
+          name: 'Pipeline Completo de Desenvolvimento',
+          description: 'Fluxo completo para análise, geração e documentação de projetos',
+          agents: activeAgents.slice(0, 3).map(agent => agent.id),
+          workspaceId: selectedWorkspace || 'default'
+        };
+
+        try {
+          await fetch('/api/compositions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sampleComposition),
+          });
+          
+          // Recarregar composições após criar
+          setTimeout(loadCompositions, 500);
+        } catch (error) {
+          console.error('Erro ao criar composição de exemplo:', error);
+        }
+      }
+    }, 1500);
+  };
+
+  const loadCompositions = async () => {
+    try {
+      const response = await fetch('/api/compositions');
+      if (response.ok) {
+        const data = await response.json();
+        setCompositions(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar composições:', error);
+    }
+  };
 
   const loadWorkspaces = async () => {
     try {
@@ -124,6 +267,35 @@ export default function Home() {
     }
   };
 
+  const createComposition = async () => {
+    if (!newComposition.name || !selectedWorkspace) return;
+
+    try {
+      const response = await fetch('/api/compositions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newComposition,
+          workspaceId: selectedWorkspace,
+        }),
+      });
+
+      if (response.ok) {
+        await loadCompositions();
+        setIsCreateCompositionOpen(false);
+        setNewComposition({
+          name: '',
+          description: '',
+          agents: []
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao criar composição:', error);
+    }
+  };
+
   const createWorkspace = async () => {
     if (!newWorkspace.name) return;
 
@@ -147,6 +319,40 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Erro ao criar workspace:', error);
+    }
+  };
+
+  const executeComposition = async (composition: Composition) => {
+    try {
+      const response = await fetch('/api/compositions/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          compositionId: composition.id,
+          input: 'Executar composição'
+        }),
+      });
+
+      const result = await response.json();
+      console.log('Resultado da composição:', result);
+    } catch (error) {
+      console.error('Erro ao executar composição:', error);
+    }
+  };
+
+  const toggleArchiveComposition = async (composition: Composition) => {
+    try {
+      const response = await fetch('/api/compositions/' + composition.id + '/archive', {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        await loadCompositions();
+      }
+    } catch (error) {
+      console.error('Erro ao arquivar/desarquivar composição:', error);
     }
   };
 
@@ -176,6 +382,20 @@ export default function Home() {
       });
     } finally {
       setIsExecuting(false);
+    }
+  };
+
+  const toggleArchiveAgent = async (agent: Agent) => {
+    try {
+      const response = await fetch('/api/agents/' + agent.id + '/archive', {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        await loadAgents();
+      }
+    } catch (error) {
+      console.error('Erro ao arquivar/desarquivar agente:', error);
     }
   };
 
@@ -213,11 +433,11 @@ export default function Home() {
             <div className="relative w-10 h-10">
               <img
                 src="/hippocampus-logo.png"
-                alt="UrbanDev Logo"
+                alt="Zanai Project Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-2xl font-bold">UrbanDev - Sistema de Gestão Urbana</h1>
+            <h1 className="text-2xl font-bold">Zanai Project - Sistema de Gestão de IA</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Select value={selectedWorkspace} onValueChange={setSelectedWorkspace}>
@@ -382,7 +602,7 @@ export default function Home() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{agent.name}</CardTitle>
                       <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(agent.status)}`} />
+                        <div className={'w-3 h-3 rounded-full ' + getStatusColor(agent.status)} />
                         <Badge className={getTypeColor(agent.type)}>
                           {agent.type}
                         </Badge>
@@ -402,6 +622,9 @@ export default function Home() {
                             <Settings className="w-4 h-4" />
                           </Button>
                         </EditAgentDialog>
+                        <Button size="sm" variant="outline" onClick={() => toggleArchiveAgent(agent)}>
+                          {agent.status === 'active' ? <Archive className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -518,40 +741,139 @@ export default function Home() {
           <TabsContent value="composition" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Composição de Agentes</h2>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Criar Composição
-              </Button>
+              <Dialog open={isCreateCompositionOpen} onOpenChange={setIsCreateCompositionOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Composição
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Criar Nova Composição</DialogTitle>
+                    <DialogDescription>
+                      Combine múltiplos agentes para criar fluxos de trabalho complexos.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Nome</label>
+                      <Input
+                        value={newComposition.name}
+                        onChange={(e) => setNewComposition({ ...newComposition, name: e.target.value })}
+                        placeholder="Nome da composição"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Descrição</label>
+                      <Textarea
+                        value={newComposition.description}
+                        onChange={(e) => setNewComposition({ ...newComposition, description: e.target.value })}
+                        placeholder="Descrição da composição"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Agentes Disponíveis</label>
+                      <div className="space-y-2 mt-2">
+                        {agents.filter(agent => agent.status === 'active').map((agent) => (
+                          <div key={agent.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={'agent-' + agent.id}
+                              checked={newComposition.agents.includes(agent.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewComposition({
+                                    ...newComposition,
+                                    agents: [...newComposition.agents, agent.id]
+                                  });
+                                } else {
+                                  setNewComposition({
+                                    ...newComposition,
+                                    agents: newComposition.agents.filter(id => id !== agent.id)
+                                  });
+                                }
+                              }}
+                            />
+                            <label htmlFor={'agent-' + agent.id} className="text-sm">
+                              {agent.name} - {agent.description}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <Button onClick={createComposition} className="w-full">
+                      Criar Composição
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">Exemplo de Composição</CardTitle>
-                  <CardDescription>
-                    Combinação de agentes para análise completa de projetos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <Badge variant="outline">Analisador de Código</Badge>
-                    <Badge variant="outline">Gerador de API</Badge>
-                    <Badge variant="outline">Assistente de Documentação</Badge>
-                  </div>
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-sm text-muted-foreground">3 agentes</span>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Play className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Settings className="w-4 h-4" />
-                      </Button>
+              {compositions.map((composition) => (
+                <Card key={composition.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{composition.name}</CardTitle>
+                      <div className="flex items-center space-x-2">
+                        <div className={'w-3 h-3 rounded-full ' + (composition.status === 'active' ? 'bg-green-500' : 'bg-gray-500')} />
+                        <Badge variant={composition.status === 'active' ? 'default' : 'secondary'}>
+                          {composition.status}
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <CardDescription>{composition.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Agentes na composição:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {composition.agents.map((agentId) => {
+                          const agent = agents.find(a => a.id === agentId);
+                          return agent ? (
+                            <Badge key={agentId} variant="outline" className="text-xs">
+                              {agent.name}
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-sm text-muted-foreground">
+                        Criado em {new Date(composition.createdAt).toLocaleDateString()}
+                      </span>
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline" onClick={() => executeComposition(composition)}>
+                          <Play className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => toggleArchiveComposition(composition)}>
+                          {composition.status === 'active' ? <Archive className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+
+            {compositions.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhuma composição encontrada</h3>
+                <p className="text-muted-foreground mb-4">
+                  Crie sua primeira composição combinando múltiplos agentes para fluxos de trabalho complexos.
+                </p>
+                <Dialog open={isCreateCompositionOpen} onOpenChange={setIsCreateCompositionOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Primeira Composição
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+            )}
           </TabsContent>
 
           {/* Learning Tab */}
@@ -737,7 +1059,7 @@ export default function Home() {
             {executionResult && (
               <div className="border rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
-                  <div className={`w-3 h-3 rounded-full ${executionResult.success ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className={'w-3 h-3 rounded-full ' + (executionResult.success ? 'bg-green-500' : 'bg-red-500')} />
                   <span className="font-medium">
                     {executionResult.success ? 'Execução bem-sucedida' : 'Erro na execução'}
                   </span>
