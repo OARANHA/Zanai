@@ -41,6 +41,8 @@ model Workspace {
   name        String
   description String?
   config      String   // JSON com configuração do workspace
+  vscodeContext String? // JSON com contexto do VS Code
+  lastSyncedAt DateTime? // Última sincronização com VS Code
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -59,6 +61,7 @@ model Agent {
   type        String   // 'template', 'custom', 'composed'
   config      String   // YAML com configuração do agente
   knowledge   String?  // Markdown com conhecimento do agente
+  templateId  String?  // ID do template se baseado em template
   status      String   @default("active") // 'active', 'inactive', 'training'
   workspaceId String
   userId      String?  // Opcional para agentes compartilhados
@@ -69,6 +72,7 @@ model Agent {
   user        User?     @relation(fields: [userId], references: [id])
   compositions Composition[]
   learnings   Learning[]
+  executions  AgentExecution[]
   
   @@index([workspaceId])
   @@index([userId])
@@ -101,4 +105,24 @@ model Learning {
   agent       Agent    @relation(fields: [agentId], references: [id])
   
   @@index([agentId])
+}
+
+model AgentExecution {
+  id           String   @id @default(cuid())
+  agentId      String
+  input        String
+  output       String?
+  status       String   @default("pending") // 'pending', 'running', 'completed', 'failed'
+  context      String?  // JSON com contexto adicional
+  vscodeContext String? // JSON com contexto do VS Code durante execução
+  result       String?  // JSON com resultado detalhado
+  error        String?  // Mensagem de erro se falhou
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  
+  agent        Agent    @relation(fields: [agentId], references: [id])
+  
+  @@index([agentId])
+  @@index([status])
 }
