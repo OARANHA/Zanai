@@ -38,7 +38,7 @@ Responda sempre em português de forma clara e estruturada.
 - Gestão de mudanças
 
 ## Criado em
-2025-08-14T00:59:21.767Z
+2025-08-14T01:08:39.164Z
 
 ---
 

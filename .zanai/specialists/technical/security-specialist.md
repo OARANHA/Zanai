@@ -39,7 +39,7 @@ Responda sempre em português com foco em proteção e conformidade.
 - Políticas de proteção
 
 ## Criado em
-2025-08-14T00:59:21.767Z
+2025-08-14T01:08:39.164Z
 
 ---
 

@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles, Download } from 'lucide-react';
+import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles, Download, BarChart3 } from 'lucide-react';
 import SpecialistGenerator from '@/components/specialists/SpecialistGenerator';
 import CreateAgentDialog from '@/components/agents/CreateAgentDialog';
 import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
+import AgentExecutionDialog from '@/components/agents/AgentExecutionDialog';
+import EditAgentDialog from '@/components/agents/EditAgentDialog';
 import Link from 'next/link';
 
 interface Agent {
@@ -107,6 +109,12 @@ export default function SpecialistsPage() {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            <Link href="/executions">
+              <Button variant="outline">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Histórico de Execuções
+              </Button>
+            </Link>
             <Link href="/">
               <Button variant="outline">
                 ← Voltar ao Dashboard
@@ -151,7 +159,15 @@ export default function SpecialistsPage() {
           <TabsContent value="agents" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Agentes Inteligentes</h2>
-              <CreateAgentDialog onAgentCreated={loadAgents} />
+              <div className="flex items-center space-x-2">
+                <Link href="/executions">
+                  <Button variant="outline">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Histórico de Execuções
+                  </Button>
+                </Link>
+                <CreateAgentDialog onAgentCreated={loadAgents} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,19 +194,23 @@ export default function SpecialistsPage() {
                         <span className="font-medium">Criado em:</span> {new Date(agent.createdAt).toLocaleDateString()}
                       </div>
                       <div className="flex items-center justify-between">
-                        <AgentDetailsDialog agent={agent}>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline" title="Ver Detalhes">
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
+                        <div className="flex space-x-2">
+                          <AgentExecutionDialog agent={agent}>
                             <Button size="sm" variant="outline" title="Executar Agente">
                               <Play className="w-4 h-4" />
                             </Button>
+                          </AgentExecutionDialog>
+                          <AgentDetailsDialog agent={agent}>
+                            <Button size="sm" variant="outline" title="Ver Detalhes">
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                          </AgentDetailsDialog>
+                          <EditAgentDialog agent={agent} onAgentUpdated={loadAgents}>
                             <Button size="sm" variant="outline" title="Configurar Agente">
                               <Settings className="w-4 h-4" />
                             </Button>
-                          </div>
-                        </AgentDetailsDialog>
+                          </EditAgentDialog>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

@@ -33,4 +33,4 @@ Este diretório contém templates de agentes especialistas organizados por categ
 ## Gerado por
 
 Esta estrutura foi gerada automaticamente pelo sistema Zanai.
-Data de geração: 2025-08-14T00:59:21.778Z
+Data de geração: 2025-08-14T01:08:42.239Z
