@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Loader2, Save, FileText, Code, Database } from 'lucide-react';
 
 interface Agent {
@@ -67,7 +68,7 @@ export default function EditAgentDialog({ agent, onAgentUpdated, children }: Edi
 
   const loadAgentData = async () => {
     try {
-      const response = await fetch(`/api/agents?id=${agent.id}`);
+      const response = await fetch(`/api/agents/${agent.id}`);
       if (response.ok) {
         const agentData = await response.json();
         setFormData({

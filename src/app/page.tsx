@@ -10,14 +10,22 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles } from 'lucide-react';
+import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles, Shield, Building } from 'lucide-react';
+import EditAgentDialog from '@/components/agents/EditAgentDialog';
 
 interface Agent {
   id: string;
   name: string;
   description: string;
   type: 'template' | 'custom' | 'composed';
+  config: string;
+  knowledge?: string;
   status: 'active' | 'inactive' | 'training';
+  workspaceId: string;
+  workspace?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
 }
 
@@ -204,12 +212,12 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <div className="relative w-10 h-10">
               <img
-                src="/logo.svg"
-                alt="Zanai Logo"
+                src="/hippocampus-logo.png"
+                alt="UrbanDev Logo"
                 className="w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-2xl font-bold">Zanai - Sistema de Agentes Inteligentes</h1>
+            <h1 className="text-2xl font-bold">UrbanDev - Sistema de Gestão Urbana</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Select value={selectedWorkspace} onValueChange={setSelectedWorkspace}>
@@ -261,6 +269,12 @@ export default function Home() {
                 </div>
               </DialogContent>
             </Dialog>
+            <Link href="/login">
+              <Button variant="outline">
+                <Shield className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -389,9 +403,11 @@ export default function Home() {
                         <Button size="sm" variant="outline" onClick={() => openExecuteDialog(agent)}>
                           <Play className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <Settings className="w-4 h-4" />
-                        </Button>
+                        <EditAgentDialog agent={agent} onAgentUpdated={loadAgents}>
+                          <Button size="sm" variant="outline">
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                        </EditAgentDialog>
                       </div>
                     </div>
                   </CardContent>
