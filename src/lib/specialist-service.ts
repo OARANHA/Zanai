@@ -391,6 +391,7 @@ Responda apenas com o JSON, sem texto adicional.`;
             content: prompt
           }
         ],
+        model: 'glm-4.5-flash',
         temperature: 0.7,
         max_tokens: 2000
       });

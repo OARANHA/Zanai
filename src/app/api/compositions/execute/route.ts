@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
               content: input
             }
           ],
+          model: 'glm-4.5-flash',
           temperature: 0.7,
           max_tokens: 1000
         });

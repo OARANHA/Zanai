@@ -1,5 +1,6 @@
 import ZAI from 'z-ai-web-dev-sdk';
 import { db } from '@/lib/db';
+import { getZAIConfig } from './zai-config';
 
 export interface AgentExecutionRequest {
   agentId: string;
@@ -30,7 +31,11 @@ export class AgentExecutionService {
   private async initializeZAI() {
     if (!this.zai) {
       try {
-        this.zai = await ZAI.create();
+        console.log('Inicializando ZAI com configuração...');
+        const config = getZAIConfig();
+        console.log('Configuração ZAI:', JSON.stringify(config, null, 2));
+        this.zai = await ZAI.create(config);
+        console.log('ZAI inicializado com sucesso');
       } catch (error) {
         console.error('Erro ao inicializar ZAI:', error);
         throw new Error('Falha ao inicializar serviço de IA');
@@ -71,11 +76,29 @@ export class AgentExecutionService {
             content: request.input
           }
         ],
+        model: 'glm-4.5-flash',
         temperature: 0.7,
         max_tokens: 2000
       });
 
-      const output = completion.choices[0]?.message?.content || '';
+      console.log('Resposta da API Z.ai:', JSON.stringify(completion, null, 2));
+
+      // Verificar se a resposta tem a estrutura esperada - ser mais tolerante
+      let output = '';
+      if (completion && completion.choices && completion.choices[0] && completion.choices[0].message) {
+        output = completion.choices[0].message.content || '';
+      } else if (completion && completion.choices && completion.choices[0]) {
+        // Tentar outros formatos possíveis
+        output = completion.choices[0].text || JSON.stringify(completion.choices[0]);
+      } else if (completion && completion.content) {
+        // Outro formato possível
+        output = completion.content;
+      } else {
+        // Se não encontrar o formato esperado, logar a estrutura completa
+        console.warn('Formato de resposta inesperado:', completion);
+        output = JSON.stringify(completion);
+      }
+
       const executionTime = Date.now() - startTime;
 
       // Registrar aprendizado

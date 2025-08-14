@@ -7,7 +7,7 @@ export interface ZAIConfig {
 }
 
 export const ZAI_DEFAULT_CONFIG: Partial<ZAIConfig> = {
-  model: 'GLM-4.5-Flash',  // ← LINHA ALTERADA PARA O MODELO CORRETO
+  model: 'glm-4.5-flash',  // ← LINHA ALTERADA PARA O MODELO CORRETO
   maxTokens: 2000,
   temperature: 0.7,
 };

@@ -68,16 +68,32 @@ export default function Home() {
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Debug: Log component state
-  console.log('Component state:', {
-    agents: agents.length,
-    workspaces: workspaces.length,
-    specialists: specialists.length,
-    compositions: compositions.length,
-    loading,
-    error
-  });
+  // Garantir que o código só execute no cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Só carregar dados se estiver no cliente
+  useEffect(() => {
+    if (isClient) {
+      console.log('Component mounted on client, calling loadData...');
+      loadData();
+    }
+  }, [isClient]);
+
+  // Debug: Log component state - apenas no cliente
+  if (isClient) {
+    console.log('Component state:', {
+      agents: agents.length,
+      workspaces: workspaces.length,
+      specialists: specialists.length,
+      compositions: compositions.length,
+      loading,
+      error
+    });
+  }
 
   // Funções de carregamento de dados
   const loadWorkspaces = async () => {
@@ -89,6 +105,7 @@ export default function Home() {
         const data = await response.json();
         console.log('Workspaces data received:', data);
         setWorkspaces(data);
+        return data;
       } else {
         console.error('Workspaces API response not ok:', response.status);
         throw new Error(`API response: ${response.status}`);
@@ -96,14 +113,14 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao carregar workspaces:', error);
       // Fallback para dados de teste
-      setWorkspaces([
-        {
-          id: 'test-workspace',
-          name: 'Workspace Principal',
-          description: 'Ambiente de trabalho principal',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      const fallbackData = [{
+        id: 'test-workspace',
+        name: 'Workspace Principal',
+        description: 'Ambiente de trabalho principal',
+        createdAt: new Date().toISOString()
+      }];
+      setWorkspaces(fallbackData);
+      return fallbackData;
     }
   };
 
@@ -116,6 +133,7 @@ export default function Home() {
         const data = await response.json();
         console.log('Agents data received:', data);
         setAgents(data);
+        return data;
       } else {
         console.error('Agents API response not ok:', response.status);
         throw new Error(`API response: ${response.status}`);
@@ -123,18 +141,18 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao carregar agentes:', error);
       // Fallback para dados de teste
-      setAgents([
-        {
-          id: 'test-agent',
-          name: 'Agente de Teste',
-          description: 'Agente para demonstração',
-          type: 'template' as const,
-          config: '',
-          status: 'active' as const,
-          workspaceId: 'test-workspace',
-          createdAt: new Date().toISOString()
-        }
-      ]);
+      const fallbackData = [{
+        id: 'test-agent',
+        name: 'Agente de Teste',
+        description: 'Agente para demonstração',
+        type: 'template' as const,
+        config: '',
+        status: 'active' as const,
+        workspaceId: 'test-workspace',
+        createdAt: new Date().toISOString()
+      }];
+      setAgents(fallbackData);
+      return fallbackData;
     }
   };
 
@@ -158,6 +176,7 @@ export default function Home() {
           agents: comp.agents || []
         }));
         setCompositions(mappedCompositions);
+        return mappedCompositions;
       } else {
         console.error('Compositions API response not ok:', response.status);
         throw new Error(`API response: ${response.status}`);
@@ -165,18 +184,18 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao carregar composições:', error);
       // Fallback para dados de teste
-      setCompositions([
-        {
-          id: 'test-comp-1',
-          name: 'Pipeline de Desenvolvimento',
-          description: 'Fluxo completo para análise e desenvolvimento',
-          status: 'active' as const,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          workspaceId: 'test-workspace',
-          agents: []
-        }
-      ]);
+      const fallbackData = [{
+        id: 'test-comp-1',
+        name: 'Pipeline de Desenvolvimento',
+        description: 'Fluxo completo para análise e desenvolvimento',
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        workspaceId: 'test-workspace',
+        agents: []
+      }];
+      setCompositions(fallbackData);
+      return fallbackData;
     }
   };
 
@@ -189,6 +208,7 @@ export default function Home() {
         const data = await response.json();
         console.log('Specialists data received:', data);
         setSpecialists(data.templates || []);
+        return data.templates || [];
       } else {
         console.error('Specialists API response not ok:', response.status);
         throw new Error(`API response: ${response.status}`);
@@ -196,7 +216,7 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao carregar especialistas:', error);
       // Fallback para dados de teste
-      setSpecialists([
+      const fallbackData = [
         {
           id: 'test-1',
           name: 'Business Analyst',
@@ -215,7 +235,9 @@ export default function Home() {
           useCases: ['Payment Integration', 'Security Audits', 'System Architecture'],
           created: new Date().toISOString()
         }
-      ]);
+      ];
+      setSpecialists(fallbackData);
+      return fallbackData;
     }
   };
 
@@ -225,23 +247,21 @@ export default function Home() {
     setError(null);
     
     try {
-      console.log('Loading workspaces...');
-      await loadWorkspaces();
-      console.log('Workspaces loaded:', workspaces.length);
+      console.log('Loading all data in parallel...');
+      // Carregar todos os dados em paralelo
+      const [workspacesData, agentsData, specialistsData, compositionsData] = await Promise.all([
+        loadWorkspaces(),
+        loadAgents(),
+        loadSpecialists(),
+        loadCompositions()
+      ]);
       
-      console.log('Loading agents...');
-      await loadAgents();
-      console.log('Agents loaded:', agents.length);
-      
-      console.log('Loading specialists...');
-      await loadSpecialists();
-      console.log('Specialists loaded:', specialists.length);
-      
-      console.log('Loading compositions...');
-      await loadCompositions();
-      console.log('Compositions loaded:', compositions.length);
-      
-      console.log('All data loaded successfully');
+      console.log('All data loaded successfully:', {
+        workspaces: workspacesData?.length || 0,
+        agents: agentsData?.length || 0,
+        specialists: specialistsData?.length || 0,
+        compositions: compositionsData?.length || 0
+      });
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
       setError('Erro ao carregar dados. Por favor, tente novamente.');
@@ -250,20 +270,23 @@ export default function Home() {
     }
   };
 
+  // Log when data changes - apenas no cliente
   useEffect(() => {
-    console.log('Component mounted, calling loadData...');
-    loadData();
-  }, []);
-
-  // Log when data changes
-  useEffect(() => {
-    console.log('Data updated:', {
-      agents: agents.length,
-      workspaces: workspaces.length,
-      specialists: specialists.length,
-      compositions: compositions.length
-    });
-  }, [agents, workspaces, specialists, compositions]);
+    if (isClient) {
+      console.log('Data updated:', {
+        agents: agents.length,
+        workspaces: workspaces.length,
+        specialists: specialists.length,
+        compositions: compositions.length
+      });
+      console.log('Actual data:', {
+        agents,
+        workspaces,
+        specialists,
+        compositions
+      });
+    }
+  }, [agents, workspaces, specialists, compositions, isClient]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
