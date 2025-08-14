@@ -7,7 +7,6 @@ export interface ZAIConfig {
 }
 
 export const ZAI_DEFAULT_CONFIG: Partial<ZAIConfig> = {
-  baseUrl: 'https://api.z.ai/v1',
   model: 'gpt-4',
   maxTokens: 2000,
   temperature: 0.7,
@@ -15,6 +14,7 @@ export const ZAI_DEFAULT_CONFIG: Partial<ZAIConfig> = {
 
 export function getZAIConfig(): ZAIConfig {
   const apiKey = process.env.ZAI_API_KEY;
+  const baseUrl = process.env.ZAI_BASE_URL;
   
   if (!apiKey) {
     throw new Error('ZAI_API_KEY environment variable is required');
@@ -22,6 +22,7 @@ export function getZAIConfig(): ZAIConfig {
 
   return {
     apiKey,
+    baseUrl,
     ...ZAI_DEFAULT_CONFIG,
   };
 }

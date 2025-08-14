@@ -22,9 +22,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(templates);
     }
 
+    // Check if ZAI API is configured
+    let warning = '';
+    try {
+      const { getZAIConfig } = await import('@/lib/zai-config');
+      getZAIConfig(); // This will throw if API key is not configured
+    } catch (error) {
+      warning = 'A chave da API Z.ai não está configurada. Os especialistas serão gerados com templates básicos. Para obter melhores resultados, configure a variável de ambiente ZAI_API_KEY no arquivo .env.';
+    }
+
     return NextResponse.json({
       categories: SPECIALIST_CATEGORIES,
-      templates: SPECIALIST_TEMPLATES
+      templates: SPECIALIST_TEMPLATES,
+      warning
     });
   } catch (error) {
     console.error('Error fetching specialists:', error);

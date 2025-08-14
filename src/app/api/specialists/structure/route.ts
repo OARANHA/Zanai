@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { NextRequest, NextResponse } from 'next/server';
 import { SpecialistService, SPECIALIST_CATEGORIES, SPECIALIST_TEMPLATES } from '@/lib/specialist-service';
 import { writeFile, mkdir } from 'fs/promises';
@@ -116,13 +117,13 @@ Data de geração: ${new Date().toISOString()}
 
 export async function GET() {
   try {
-    const { readFileSync, existsSync } = require('fs');
-    const { join } = 'path';
+    const fs = require('fs');
+    const path = require('path');
     
     const basePath = '.zanai/specialists';
-    const baseDir = join(process.cwd(), basePath);
+    const baseDir = path.join(process.cwd(), basePath);
     
-    if (!existsSync(baseDir)) {
+    if (!fs.existsSync(baseDir)) {
       return NextResponse.json({
         exists: false,
         message: 'Estrutura de pastas não encontrada'
@@ -130,20 +131,20 @@ export async function GET() {
     }
 
     const categories = SPECIALIST_CATEGORIES.map(category => {
-      const categoryDir = join(baseDir, category.id);
+      const categoryDir = path.join(baseDir, category.id);
       const files = [];
       
-      if (existsSync(categoryDir)) {
+      if (fs.existsSync(categoryDir)) {
         const specialistFiles = SPECIALIST_TEMPLATES.filter(t => t.category === category.id);
         
         for (const template of specialistFiles) {
-          const filePath = join(categoryDir, `${template.id}.md`);
-          if (existsSync(filePath)) {
+          const filePath = path.join(categoryDir, `${template.id}.md`);
+          if (fs.existsSync(filePath)) {
             files.push({
               name: `${template.id}.md`,
-              path: join(basePath, category.id, `${template.id}.md`),
+              path: path.join(basePath, category.id, `${template.id}.md`),
               template: template.name,
-              size: readFileSync(filePath, 'utf-8').length
+              size: fs.readFileSync(filePath, 'utf-8').length
             });
           }
         }

@@ -353,8 +353,14 @@ export class SpecialistService {
   }
 
   async generateSpecialist(category: string, specialty: string, requirements: string): Promise<SpecialistTemplate> {
+    // Check if ZAI is available, if not return a mock template
     if (!this.zai) {
-      await this.initializeZAI();
+      try {
+        await this.initializeZAI();
+      } catch (error) {
+        console.warn('ZAI not available, returning mock template:', error);
+        return this.generateMockTemplate(category, specialty, requirements);
+      }
     }
 
     const prompt = `Crie um template de agente especialista com as seguintes características:
@@ -394,7 +400,15 @@ Responda apenas com o JSON, sem texto adicional.`;
         throw new Error('No response from ZAI');
       }
 
-      const generated = JSON.parse(response);
+      // Clean the response - remove markdown code blocks if present
+      let cleanResponse = response.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const generated = JSON.parse(cleanResponse);
       
       return {
         id: this.generateId(generated.name),
@@ -408,8 +422,53 @@ Responda apenas com o JSON, sem texto adicional.`;
       };
     } catch (error) {
       console.error('Error generating specialist:', error);
-      throw new Error('Failed to generate specialist template');
+      // Fallback to mock template if AI generation fails
+      return this.generateMockTemplate(category, specialty, requirements);
     }
+  }
+
+  private generateMockTemplate(category: string, specialty: string, requirements: string): SpecialistTemplate {
+    const categoryInfo = SPECIALIST_CATEGORIES.find(c => c.id === category);
+    const categoryName = categoryInfo?.name || 'General';
+    
+    return {
+      id: this.generateId(specialty),
+      name: `${specialty} Specialist`,
+      description: `Especialista em ${specialty} com foco em ${requirements.toLowerCase()}`,
+      category,
+      prompt: `Você é um especialista em ${specialty} com experiência em ${requirements.toLowerCase()}.
+
+Suas responsabilidades:
+1. Analisar requisitos e necessidades específicas
+2. Propor soluções alinhadas aos objetivos do negócio
+3. Implementar melhores práticas da área
+4. Garantir qualidade e eficiência nos resultados
+5. Manter-se atualizado sobre tendências do mercado
+
+Ao trabalhar com projetos:
+- Entenda o contexto e os objetivos principais
+- Identifique os requisitos-chave e restrições
+- Proponha soluções práticas e eficazes
+- Documente todas as recomendações
+- Forneça acompanhamento e suporte contínuo
+
+Responda sempre em português de forma clara e profissional.`,
+      skills: [
+        `Análise de ${specialty.toLowerCase()}`,
+        'Solução de problemas',
+        'Comunicação eficaz',
+        'Gestão de projetos',
+        'Melhoria contínua'
+      ],
+      useCases: [
+        `Consultoria em ${specialty.toLowerCase()}`,
+        'Análise de requisitos',
+        'Implementação de soluções',
+        'Otimização de processos',
+        'Treinamento e capacitação'
+      ],
+      created: new Date()
+    };
   }
 
   private generateId(name: string): string {

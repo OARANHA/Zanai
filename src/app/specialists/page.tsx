@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Users, Target, BookOpen, Plus, Settings, Play, Pause, Archive, MessageSquare, Sparkles, Download } from 'lucide-react';
 import SpecialistGenerator from '@/components/specialists/SpecialistGenerator';
+import CreateAgentDialog from '@/components/agents/CreateAgentDialog';
+import AgentDetailsDialog from '@/components/agents/AgentDetailsDialog';
 import Link from 'next/link';
 
 interface Agent {
@@ -15,7 +17,13 @@ interface Agent {
   description: string;
   type: 'template' | 'custom' | 'composed';
   status: 'active' | 'inactive' | 'training';
+  config: string;
+  knowledge?: string;
   createdAt: string;
+  workspace?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface Workspace {
@@ -143,12 +151,7 @@ export default function SpecialistsPage() {
           <TabsContent value="agents" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Agentes Inteligentes</h2>
-              <Link href="/">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Agente
-                </Button>
-              </Link>
+              <CreateAgentDialog onAgentCreated={loadAgents} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -167,15 +170,27 @@ export default function SpecialistsPage() {
                     <CardDescription>{agent.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Criado em {new Date(agent.createdAt).toLocaleDateString()}</span>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Play className="w-4 h-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Settings className="w-4 h-4" />
-                        </Button>
+                    <div className="space-y-3">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium">Workspace:</span> {agent.workspace?.name || 'N/A'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium">Criado em:</span> {new Date(agent.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <AgentDetailsDialog agent={agent}>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline" title="Ver Detalhes">
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" title="Executar Agente">
+                              <Play className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" title="Configurar Agente">
+                              <Settings className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </AgentDetailsDialog>
                       </div>
                     </div>
                   </CardContent>
